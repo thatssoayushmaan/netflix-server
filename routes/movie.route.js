@@ -26,6 +26,7 @@ router.put('/:id', verify, async (req,res)=> {
     if(req.user.isAdmin){
         try {
             const updatedMovie = await Movie.findByIdAndUpdate(req.params.id, {$set : req.body}, {new : true})
+            res.json(updatedMovie)
         } catch (error) {
             res.status(500).json(error)
         }
@@ -49,7 +50,7 @@ router.delete('/:id', verify, async (req,res) => {
 })
 
 //Get
-router.get('/find/:id', async (req,res) => {
+router.get('/find/:id', verify, async (req,res) => {
     try {
         const movie = await Movie.findById(req.params.id)
         res.status(200).json(movie)
@@ -59,21 +60,26 @@ router.get('/find/:id', async (req,res) => {
 })
 
 //Get Random
-router.get('/random', async (req,res) => {
-    const type = req.query.type
-    let movie
-    if(type === 'series'){
+router.get("/random", verify, async (req, res) => {
+    const type = req.query.type;
+    let movie;
+    try {
+      if (type === "series") {
         movie = await Movie.aggregate([
-            { $match : {isSeries : true} },
-            { $sample : {size : 1} }
-        ])
-    }else{
+          { $match: { isSeries: true } },
+          { $sample: { size: 1 } },
+        ]);
+      } else {
         movie = await Movie.aggregate([
-            { $match : {isSeries : false} },
-            { $sample : {size : 1}}
-        ])
+          { $match: { isSeries: false } },
+          { $sample: { size: 1 } },
+        ]);
+      }
+      res.status(200).json(movie);
+    } catch (err) {
+      res.status(500).json(err);
     }
-})
+  });
 
 //Get All
 router.get('/', verify, async (req,res) => {
